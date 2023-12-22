@@ -1,5 +1,348 @@
-template-repository (1.0-1) unstable; urgency=medium
+dxvk (2.3-1deepin1) unstable; urgency=medium
 
-  * Initial release
+  * Add support for deepin-wine8-stable
 
- -- Tsic404 <liuheng@deepin.org>  Sat, 28 Jan 2023 13:46:49 +0800
+ -- Archie Meng <mengyutao@deepin.org>  Fri, 22 Dec 2023 16:28:24 +0800
+
+dxvk (2.3-1) unstable; urgency=medium
+
+  * NUR:
+    - refresh patches
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Fri, 10 Nov 2023 03:44:17 +0900
+
+dxvk (2.2-1) unstable; urgency=medium
+
+  * NUR.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Wed, 14 Jun 2023 15:09:40 +0900
+
+dxvk (2.1-1) unstable; urgency=medium
+
+  * NUR:
+    - refresh patches
+    - bundle DXVK's author's libdisplay-info fork
+      (until we can use the original project)
+      (with a make target to regenerate the tarball)
+    - add symlink for vk_video include files
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 07 Feb 2023 23:13:17 +0900
+
+dxvk (2.0-1) unstable; urgency=medium
+
+  * NUR.
+  * Adapt to 2.0 buildsystem changes
+  * Update copyright information.
+  * Enable LTO.
+  * Strip DLLs and move debug info in a debsym package (Closes:
+    #975475).
+  * Bump Standards-Version to 4.6.2 (no changes needed).
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 20 Dec 2022 21:44:16 +0900
+
+dxvk (1.10.3+ds1-1) unstable; urgency=medium
+
+  * NUR.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Mon, 08 Aug 2022 10:12:47 +0900
+
+dxvk (1.10.1+ds1-1) unstable; urgency=medium
+
+  * NUR:
+    - refresh patches
+  * Fix build-wine.patch breaking library lookup and remove now useless
+    CreateDXGIFactory1_link_fix.patch.
+  * Improve build flags handling.
+  * Bump Standards-Version to 4.6.0 (no changes needed).
+  * Enable cross-test-friendly autopkgtest deps (courtesy of Graham
+    Inggs) (Closes: #1005883).
+  * Use debhelper's Ninja support (Meson would be better but lacks cross
+    build customization).
+  * Depend on mingw-w64 gcc instead of binutils directly.
+  * Ignore no-code-sections lintian error.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Mon, 02 May 2022 18:58:20 +0900
+
+dxvk (1.10+ds1-1) unstable; urgency=medium
+
+  * NUR.
+  * Fix build/host confusion breaking cross builds (courtesy of Helmut
+    Grohne) (Closes: #977821).
+  * Update copyright file.
+  * Adapt Wine library lookup to new subdirectories introduced in 6.8.
+  * Add patch to fix CreateDXGIFactory1 link problem.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Wed, 30 Mar 2022 15:10:15 +0900
+
+dxvk (1.9.4+ds1-1) unstable; urgency=medium
+
+  * NUR.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 25 Jan 2022 16:36:28 +0900
+
+dxvk (1.9.3+ds1-1) unstable; urgency=medium
+
+  * Update descriptions to include D3D9 (courtesy of Adrian Heine).
+  * NUR.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Wed, 12 Jan 2022 11:54:57 +0900
+
+dxvk (1.9.2+ds1-1) unstable; urgency=medium
+
+  * NUR.
+  * Adapt c_link_args and cpp_link_args for new Meson version.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 28 Sep 2021 19:39:54 +0900
+
+dxvk (1.9.1+ds1-1) unstable; urgency=medium
+
+  * NUR:
+    - refresh patches
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 03 Aug 2021 19:21:49 +0900
+
+dxvk (1.9+ds1-1) unstable; urgency=medium
+
+  * NUR:
+    - refresh patches
+  * Fix dxvk-setup override apply/restore.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Thu, 22 Jul 2021 15:41:36 +0900
+
+dxvk (1.8.1+ds1-1) unstable; urgency=medium
+
+  * NUR:
+    - refresh patches
+  * Enable stackprotector hardening.
+  * Fixed autopkgtest.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 09 Mar 2021 20:19:13 +0900
+
+dxvk (1.7.3+ds1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Wed, 09 Dec 2020 06:06:19 +0900
+
+dxvk (1.7.2+ds1-4) unstable; urgency=medium
+
+  * Pass the proper wine libdir to the build.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 01 Dec 2020 23:05:33 +0900
+
+dxvk (1.7.2+ds1-3) unstable; urgency=medium
+
+  * Match architectures with those supported by wine-development.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 01 Dec 2020 18:46:26 +0900
+
+dxvk (1.7.2+ds1-2) unstable; urgency=medium
+
+  * Pass dpkg-buildflags to Meson.
+  * Fix dxvk-setup to work on path containing spaces (thanks to
+    Guillaume Charifi).
+  * Bump debhelper compat level to 13.
+  * Bump Standards-Version to 4.5.0 (no changes needed).
+  * Bump watch version to 4.
+  * Update patches metadata.
+  * Add lintian override for maintainer-manual-page for Debian-specific
+    version of dxvk-setup.
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Tue, 10 Nov 2020 17:34:50 +0900
+
+dxvk (1.7.2+ds1-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #952966, #954539).
+  * Adapt to build using mingw as is done upstream now.
+  * Add myself to uploaders (with maintainer's consent).
+
+ -- Marc Dequènes (Duck) <Duck@DuckCorp.org>  Wed, 21 Oct 2020 12:29:37 +0900
+
+dxvk (1.5.4+ds1-2) unstable; urgency=medium
+
+  * Tests: check for d3d9.dll.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 09 Feb 2020 20:37:54 -0500
+
+dxvk (1.5.4+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+  * dxvk-setup: install d3d9 dll.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 09 Feb 2020 17:19:17 -0500
+
+dxvk (1.4.6+ds1-2) unstable; urgency=medium
+
+  * Only support amd64 and any-i386.
+
+ -- Alexandre Viau <aviau@debian.org>  Thu, 16 Jan 2020 11:20:02 -0500
+
+dxvk (1.4.6+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 15 Dec 2019 18:19:14 -0500
+
+dxvk (1.4.3+ds1-2) unstable; urgency=medium
+
+  * setup-dxvk: Echo errors to stderr.
+  * Install 32bit libs in 64bit prefixes. (Closes: #925563)
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 15 Dec 2019 17:13:19 -0500
+
+dxvk (1.4.3+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Refresh dxvk-version.patch.
+
+ -- Alexandre Viau <aviau@debian.org>  Fri, 25 Oct 2019 17:18:57 -0400
+
+dxvk (0.96+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sat, 26 Jan 2019 23:21:44 -0500
+
+dxvk (0.95+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sat, 12 Jan 2019 19:28:29 -0500
+
+dxvk (0.94+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sat, 15 Dec 2018 13:02:25 -0500
+
+dxvk (0.93+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sat, 24 Nov 2018 12:42:08 -0500
+
+dxvk (0.92+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 11 Nov 2018 13:29:17 -0500
+
+dxvk (0.91+ds1-14) unstable; urgency=medium
+
+  * autopkgtest: allow-stderr.
+
+ -- Alexandre Viau <aviau@debian.org>  Wed, 07 Nov 2018 23:18:41 -0500
+
+dxvk (0.91+ds1-13) unstable; urgency=medium
+
+  * dxvk-setup: support scenario where wine64 is installed without
+    wine32.
+  * dxvk-setup: exit 1 when no action was completed.
+
+ -- Alexandre Viau <aviau@debian.org>  Wed, 07 Nov 2018 10:21:30 -0500
+
+dxvk (0.91+ds1-12) unstable; urgency=medium
+
+  * augopkgtest: depend on wine-development.
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 06 Nov 2018 22:02:28 -0500
+
+dxvk (0.91+ds1-11) unstable; urgency=medium
+
+  * reformat test script.
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 06 Nov 2018 14:46:45 -0500
+
+dxvk (0.91+ds1-10) unstable; urgency=medium
+
+  * autopkgtest: don't require multi-arch.
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 06 Nov 2018 14:28:59 -0500
+
+dxvk (0.91+ds1-9) unstable; urgency=medium
+
+  * autopkgtest: explicitly list all dxvk dependencies.
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 06 Nov 2018 12:29:04 -0500
+
+dxvk (0.91+ds1-8) unstable; urgency=medium
+
+  * autopkgtest: ensure that tests use wine-development.
+
+ -- Alexandre Viau <aviau@debian.org>  Tue, 06 Nov 2018 09:31:23 -0500
+
+dxvk (0.91+ds1-7) unstable; urgency=medium
+
+  * autopkgtest: test custom wineprefix.
+
+ -- Alexandre Viau <aviau@debian.org>  Mon, 05 Nov 2018 20:27:29 -0500
+
+dxvk (0.91+ds1-6) unstable; urgency=medium
+
+  * autopkgtest: also test uninstall.
+
+ -- Alexandre Viau <aviau@debian.org>  Mon, 05 Nov 2018 20:24:55 -0500
+
+dxvk (0.91+ds1-5) unstable; urgency=medium
+
+  * autopkgtest: check for symlinks.
+
+ -- Alexandre Viau <aviau@debian.org>  Mon, 05 Nov 2018 20:10:08 -0500
+
+dxvk (0.91+ds1-4) unstable; urgency=medium
+
+  * Add autopkgtest.
+
+ -- Alexandre Viau <aviau@debian.org>  Mon, 05 Nov 2018 19:56:23 -0500
+
+dxvk (0.91+ds1-3) unstable; urgency=medium
+
+  * build on more 32bit architectures.
+
+ -- Alexandre Viau <aviau@debian.org>  Mon, 05 Nov 2018 18:45:07 -0500
+
+dxvk (0.91+ds1-2) unstable; urgency=medium
+
+  * dxvk: set Multi-Arch: foreign.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 04 Nov 2018 15:28:29 -0500
+
+dxvk (0.91+ds1-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 04 Nov 2018 15:18:34 -0500
+
+dxvk (0.90+ds3-5) unstable; urgency=medium
+
+  * dxvk-setup: default to the installed wine version.
+
+ -- Alexandre Viau <aviau@debian.org>  Fri, 02 Nov 2018 19:50:33 -0400
+
+dxvk (0.90+ds3-4) unstable; urgency=medium
+
+  * d/control: specify build dependencies per architecture.
+
+ -- Alexandre Viau <aviau@debian.org>  Thu, 01 Nov 2018 17:44:03 -0400
+
+dxvk (0.90+ds3-3) unstable; urgency=medium
+
+  * dxvk-setup: improve wine32 support.
+  * dxvk-setup: remove unused quiet variable.
+  * d/control: bump standards-version.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 21 Oct 2018 13:53:02 -0400
+
+dxvk (0.90+ds3-2) unstable; urgency=medium
+
+  * d/control: recommend dxvk in dxvk-wine* packages.
+  * Ship dxvk-setup script.
+  * d/control: mention dxvk-setup in dxvk's description.
+
+ -- Alexandre Viau <aviau@debian.org>  Sun, 21 Oct 2018 12:24:09 -0400
+
+dxvk (0.90+ds3-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #911195)
+
+ -- Alexandre Viau <aviau@debian.org>  Thu, 18 Oct 2018 18:11:27 -0400

@@ -1,0 +1,48 @@
+.TH DXVK-SETUP 1
+
+.SH NAME
+
+dxvk-setup \- install or uninstall DXVK from a Wine prefix
+
+.SH SYNOPSIS
+
+.B dxvk-setup
+[install|uninstall] [options]
+
+.SH DESCRIPTION
+
+DXVK is a Vulkan-based D3D11 and D3D10 implementation for Linux / Wine.
+
+.B dxvk-setup
+will install or uninstall DXVK from a Wine prefix. On 32bit prefixes, only dxvk-wine32 will be installed. On 64bit prefixes, both dxvk-wine32 and dxvk-wine64 will be installed.
+
+.SH COMMANDS
+
+.TP
+\fBi, install\fP
+Install DXVK in $WINEPREFIX.
+
+.TP
+\fBu, uninstall\fP
+Uninstall DXVK from $WINEPREFIX.
+
+.SH OPTIONS
+
+.TP
+\fB-s, --stable\fP
+Use wine-stable.
+
+.TP
+\fB-d, --development\fP
+Use wine-development.
+
+.SH ENVIRONMENT VARIABLES
+
+.TP
+.I WINEPREFIX
+Path of the Wine prefix where DXVK will be installed.
+
+.SH AUTHOR
+DXVK was written by Philip Rebohle
+
+dxvk-setup was written by Alexandre Viau <aviau@debian.org>

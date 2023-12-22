@@ -1,0 +1,12 @@
+Tests: check-dxvk-setup
+# cross-test-friendly autopkgtest deps
+# see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1005883
+Depends: dxvk,
+         dxvk-wine64-development [amd64],
+         dxvk-wine32-development [i386],
+         wine-development,
+         wine64-development [amd64],
+         wine32-development [i386],
+         xvfb,
+         xauth
+Restrictions: allow-stderr

@@ -1,4 +1,71 @@
 #!/usr/bin/make -f
 
+include /usr/share/dpkg/architecture.mk
+
+# The name of the build-*.txt profile to choose
+BUILD_NAME = win$(DEB_HOST_ARCH_BITS)
+
+# The directory in which we will build
+BUILD_DIR   = build-$(BUILD_NAME)
+
 %:
-	dh $@
+	dh $@ --buildsystem=ninja --builddirectory=$(BUILD_DIR)
+
+# fails with: unrecognized option '-z'
+export DEB_BUILD_MAINT_OPTIONS := hardening=-relro
+
+LDFLAGS += -flto -Wl,--build-id
+
+# Meson flags
+# TODO: why do dll files end-up in the bindir directory???
+MESON_FLAGS = --buildtype=plain \
+               --cross-file=build-$(BUILD_NAME).txt \
+			   --prefix=/usr \
+			   --bindir=lib/dxvk/wine$(DEB_HOST_ARCH_BITS)-development \
+			   --libdir=lib/dxvk/wine$(DEB_HOST_ARCH_BITS)-development \
+               $(BUILD_DIR)
+
+override_dh_auto_configure:
+	echo "blhc: ignore-line-regexp: C\+\+ linker for the build machine: .*"
+
+	mkdir -p include/vulkan/include include/spirv/include
+	# DXVK 2.0 now links to vulkan and spirv headers using submodules
+	# add temporary symlinks to use packaged headers instead
+	ln -s /usr/include/vulkan include/vulkan/include/vulkan
+	ln -s /usr/include/vk_video include/vulkan/include/vk_video
+	ln -s /usr/include/spirv include/spirv/include/spirv
+	# DXVK 2.1 now embeds libdisplay-info
+	# TODO: use libdisplay-info-src instead when no need for the fork
+	#ln -s /usr/src/libdisplay-info-src subprojects/libdisplay-info
+	tar xf debian/vendor.xz
+
+	echo "MESON_FLAGS: $(MESON_FLAGS)"
+	meson setup $(MESON_FLAGS)
+
+execute_after_dh_auto_install:
+	# we could change the install script but then the previous installations would be broken
+	rename 's/\.dll$$/.dll.so/' debian/tmp/usr/lib/dxvk/wine$(DEB_HOST_ARCH_BITS)-development/*.dll
+
+override_dh_strip:
+	# strip debug info out of ddls and store it in a separate debug file
+	# (dh_strip for windows)
+	./debian/strip_debug.sh dxvk-wine$(DEB_HOST_ARCH_BITS)-development
+	# call dh_strip to create the doc directory
+	dh_strip
+
+override_dh_shlibdeps:
+	dh_shlibdeps -- -l/usr/lib/$(DEB_HOST_MULTIARCH)/wine-development
+
+execute_after_dh_clean:
+	rm -rf include/vulkan include/spirv subprojects
+
+
+
+vendor:
+	rm -rf subprojects
+	mkdir subprojects/
+	git clone -b windows https://gitlab.freedesktop.org/JoshuaAshton/libdisplay-info.git subprojects/libdisplay-info
+	rm -rf subprojects/*/.git*
+	tar cvJf debian/vendor.xz subprojects
+	rm -rf subprojects
+

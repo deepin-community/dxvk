@@ -1,0 +1,339 @@
+#!/usr/bin/env bash
+
+set -e
+
+export WINEDEBUG=-all
+
+##################
+## exec_verbose ##
+##################
+
+function exec_verbose {
+    echo $@
+    $@
+}
+
+#####################
+## yes/no function ##
+#####################
+
+# The assumed answer (-y and -n flags)
+assume=
+
+function ask_yes_no {
+    local answer=
+    if [[ -z "$assume" ]]; then
+        read answer
+    else
+        answer=$assume
+    fi
+    echo "$answer"
+}
+
+###########################################################
+## Check for wine and wine-development and warn the user ##
+## returns the wine suffix that we should use            ##
+###########################################################
+
+# $1 = wine suffix (-development or -stable or nothing)
+function check_or_get_wine_suffix {
+    local wine_suffix=$1
+
+    if [[ -z "$wine_suffix" ]]; then
+
+        # wine-development must be installed
+	if [ -z $(which deepin-wine8-stable) ]; then
+            if ! [[ -f "/usr/bin/wine-development" ]]; then
+                echo "/usr/bin/wine-development not found, please install wine-development as wine-stable does not currently support DXVK." > /dev/stderr
+                exit 1
+            fi
+	fi
+
+        # if both wine-stable and wine-development are installed,
+        # the user must specify which one to use
+        if [[ -f "/usr/bin/wine-stable" ]] && [[ -f "/usr/bin/wine-development" ]]; then
+            echo "Found both wine-stable and wine-development, please specify which one to use with --stable or --development." > /dev/stderr
+            exit 1
+        fi
+
+        # Else, pick the one that is available
+        if [[ -f "/usr/bin/wine-stable" ]]; then
+            wine_suffix=-stable
+        elif [[ -f "/usr/bin/wine-development" ]]; then
+            wine_suffix=-development
+        fi
+
+    fi
+
+    echo $wine_suffix
+}
+
+############################################
+## Check for WINEPREFIX and warn the user ##
+############################################
+
+# $1 = wine prefix
+function check_wine_prefix {
+    local wine_prefix=$1
+    if [[ -z "$wine_prefix" ]]; then
+        echo "WINEPREFIX is not set. Proceeding will use Wine's default prefix location, creating it if it does not exist. Continue? (y/n)"
+        local continue=$(ask_yes_no)
+        if [[ "$continue" != "y" ]] && [[ "$continue" != "Y" ]]; then
+            exit 1
+        fi
+    else
+        if ! [[ -f "$wine_prefix/system.reg" ]]; then
+            echo "WINEPREFIX does not point to an existing wine installation. Proceeding will create a new one, continue? (y/n)"
+            local continue=$(ask_yes_no)
+            if [[ "$continue" != "y" ]] && [[ "$continue" != "Y" ]]; then
+                exit 1
+            fi
+        fi
+    fi
+}
+
+##################
+## Install DXVK ##
+##################
+
+# $1 = action (install/uninstall)
+# $2 = win / wine
+# $3 = 32 / 64
+function setup_dxvk {
+    local action=$1
+    local build_type=$2
+    local build_bits=$3
+
+    if [ -n $(which deepin-wine8-stable) ]; then
+	local build_name=wine64-development
+    else
+        local build_name=$build_type$build_bits$wine_suffix
+    fi
+    local build_path="/usr/lib/dxvk/$build_name"
+
+    local debian_package_name=dxvk-$build_name
+
+    if [[ ! -d "$build_path" ]]; then
+        echo "$debian_package_name not installed, skipping..."
+        return
+    fi
+
+    # Default to system32.
+    #
+    # 64bit builds always go to system32. (Thank you Microsoft)
+    #
+    # We have to be careful here because winepath's redirect behavior is very tricky.
+    # Avoid all confusion by never passing system32 or syswow64 to it.
+    #
+    local unix_windows_path=$( "$wine" winepath -0 -u c:\\windows 2> /dev/null )
+    local unix_dlls_path=$unix_windows_path/system32
+    if [[ $build_bits == 32 ]]; then
+        # 32bit builds go to syswow64 if it is present.
+        if [[ -d $unix_windows_path/syswow64 ]]; then
+            unix_dlls_path=$unix_windows_path/syswow64
+        fi
+    fi
+
+    echo "installing $debian_package_name in the wine prefix..."
+
+    "$action"_dll "$build_bits" "$build_path" "$unix_dlls_path" dxgi
+    "$action"_dll "$build_bits" "$build_path" "$unix_dlls_path" d3d10
+    "$action"_dll "$build_bits" "$build_path" "$unix_dlls_path" d3d9
+    "$action"_dll "$build_bits" "$build_path" "$unix_dlls_path" d3d10_1
+    "$action"_dll "$build_bits" "$build_path" "$unix_dlls_path" d3d10core
+    "$action"_dll "$build_bits" "$build_path" "$unix_dlls_path" d3d11
+}
+
+# $1 = (64 / 32)
+# $2 = /usr/lib/dxvk/<build-name>
+# $3 = path to prefix dlls in the unix system
+# $4 = dll name, for example dxgi
+function install_dll {
+    local build_bits=$1
+    local build_path=$2
+    local unix_dlls_path=$3
+    local dll_name=$4
+
+    local winebin=
+    if [ -n $(which deepin-wine8-stable) ]; then
+	winebin=deepin-wine8-stable
+    elif [[ $build_bits = 64 ]]; then
+        winebin=wine$build_bits$wine_suffix
+    else
+        winebin=wine$wine_suffix
+    fi
+
+    echo "    [1/2] Creating registry override for $dll_name"
+    echo -n "        "
+    "$winebin" reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v "$dll_name" /d native /f
+
+    echo "    [2/2] Creating file override for $dll_name"
+    if [ -f "$unix_dlls_path/$dll_name.dll.old" ]; then
+        echo "    override already in place"
+    else
+        mv "$unix_dlls_path/$dll_name.dll" "$unix_dlls_path/$dll_name.dll.old"
+        ln -s "$build_path/$dll_name.dll.so" "$unix_dlls_path/$dll_name.dll"
+    fi
+}
+
+# $1 = (64 / 32)
+# $2 = /usr/lib/dxvk/<build-name>
+# $3 = path to prefix dlls in the unix system
+# $4 = dll name, for example dxgi
+function uninstall_dll {
+    local build_bits=$1
+    local build_path=$2
+    local unix_dlls_path=$3
+    local dll_name=$4
+
+    local winebin=
+    if [[ $build_bits = 64 ]]; then
+        winebin=wine$build_bits$wine_suffix
+    else
+        winebin=wine$wine_suffix
+    fi
+
+    echo "    [1/2] Removing registry override for $dll_name"
+    "$winebin" reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v "$dll_name" /d builtin /f 2>&1
+
+    echo "    [2/2] Removing file override for $dll_name"
+    if [ -f "$unix_dlls_path/$dll_name.dll.old" ]; then
+        mv "$unix_dlls_path/$dll_name.dll.old" "$unix_dlls_path/$dll_name.dll"
+    else
+        echo "    override already removed"
+    fi
+}
+
+###########################
+## Check for the command ##
+###########################
+
+# $1 = the command to parse
+function parse_cmd {
+    local cmd=
+    case "$1" in
+    i|install)
+        cmd=install
+        ;;
+    u|uninstall)
+        cmd=uninstall
+        ;;
+    esac
+    echo $cmd
+}
+
+################
+## Print help ##
+################
+
+function print_help {
+    echo "Unrecognized command."
+    echo ""
+    echo "Usage: $0 [command] [options]"
+    echo ""
+    echo "Commands:"
+    echo "    i, install         install DXVK in $WINEPREFIX"
+    echo "    u, uninstall       uninstall DXVK from $WINEPREFIX"
+    echo ""
+    echo "Options:"
+    echo "    -s, --stable:      use wine-stable"
+    echo "    -d, --development: use wine-development"
+    echo "    -y, --yes:         assume yes"
+    echo "    -n, --no:          assume no"
+    exit 1
+}
+
+##########################################################################
+############################## BEGIN SCRIPT ##############################
+##########################################################################
+
+# Get the command
+cmd=$(parse_cmd $1)
+if [[ -z "$cmd" ]]; then
+    print_help
+    exit 1
+fi
+
+################
+## Parse args ##
+################
+
+# -stable or -developement
+wine_suffix=
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+
+    case $1 in
+    -y|--yes)
+        assume='y'
+        shift
+        ;;
+    -n|--no)
+        assume='n'
+        shift
+        ;;
+    -s|--stable)
+        wine_suffix="-stable"
+        shift
+        echo "DXVK is not yet compatible with Debian's wine-stable. Please use wine-development."
+        exit 1
+        ;;
+    -d|--development)
+        wine_suffix="-development"
+        shift
+        ;;
+    *)
+        POSITIONAL+=("$1")
+        shift
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}"
+
+##############################
+## Validate the wine suffix ##
+##############################
+
+wine_suffix=$(check_or_get_wine_suffix "$wine_suffix")
+
+# deepin-wine8-stable, wine-stable or wine-development
+if [ -n $(which deepin-wine8-stable) ]; then
+    wine=deepin-wine8-stable
+else
+    wine=wine$wine_suffix
+fi
+
+#########################
+## Validate WINEPREFIX ##
+#########################
+
+check_wine_prefix "$WINEPREFIX"
+
+##################
+## Install DXVK ##
+##################
+
+# Find the architectures supported by the prefix
+# and install/uninstall the corresponding builds.
+
+completed=
+
+if WINEARCH=win64 "$wine" wineboot; then
+    setup_dxvk "$cmd" wine 64
+    completed=y
+fi
+
+# Removing this check for now as we should always be able to install
+# the 32bit build. Even if wine64-development is installed without
+# wine32-development, syswow64 should be present.
+#
+#if [[ -f "/usr/lib/$wine/wine" ]]; then
+    setup_dxvk "$cmd" wine 32
+    completed=y
+#fi
+
+if [[ -z "$completed" ]]; then
+    echo "no action was completed"
+    exit 1
+fi

@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+set -e
+
+WINE=wine-development
+
+WINEPREFIX=$(pwd)/dxvk-test-prefix
+export WINEPREFIX
+
+# $@ = test expression
+function check_files {
+    # Only checking for system32, *not* sysnative as that wouldn't
+    # work on some scenarios. Look at the comments in setup-dxvk for
+    # details.
+    unix_dlls_path=$( $WINE winepath -0 -u c:\\windows 2> /dev/null )\/system32
+
+    dlls=(
+        "dxgi.dll"
+        "d3d9.dll"
+        "d3d10.dll"
+        "d3d10_1.dll"
+        "d3d10core.dll"
+        "d3d11.dll"
+    )
+
+    for file in "${dlls[@]}"; do
+        local full_dll_path=$unix_dlls_path/$file
+        echo "Checking for $full_dll_path..."
+        test $@ $full_dll_path
+    done
+}
+
+echo "Checking that dxvk-setup is present..."
+test -f /usr/bin/dxvk-setup
+
+if [[ -d "$WINEPREFIX" ]]; then
+    echo "Removing existing wine prefix..."
+    rm -rf $WINEPREFIX
+fi
+
+echo "Checking that there is nothing at WINEPREFIX..."
+test ! -d $WINEPREFIX
+
+echo "Creating a wine prefix..."
+xvfb-run $WINE wineboot
+
+echo "Checking that a wine prefix was created..."
+test -d $WINEPREFIX
+
+echo "Checking that the dlls are absent..."
+check_files ! -h
+
+echo "Running dxvk-setup..."
+xvfb-run dxvk-setup install --yes
+
+echo "Checking that dlls were installed..."
+check_files -h
+
+echo "Uninstalling the dlls..."
+xvfb-run dxvk-setup uninstall --yes
+
+echo "Checking that the dlls were removed..."
+check_files ! -h
+
+echo "Cleaing up WINEPREFIX..."
+rm -rf $WINEPREFIX
+
+echo "Checking that WINEPREFIX was removed..."
+test ! -d $WINEPREFIX

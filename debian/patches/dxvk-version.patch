@@ -1,0 +1,16 @@
+Description: Don't use git to find the version
+Author: Alexandre Viau <aviau@debian.org>
+Last-Update: 2018-10-18
+Forwarded: not-needed
+
+--- a/meson.build
++++ b/meson.build
+@@ -157,7 +157,7 @@
+ )
+ 
+ dxvk_version = vcs_tag(
+-  command: ['git', 'describe', '--dirty=+'],
++  command: ['printenv', '$(DEB_VERSION_UPSTREAM)'],
+   input:  'version.h.in',
+   output: 'version.h',
+ )
